@@ -29,21 +29,21 @@ import pandas
 
 class PRDD:
 
-    """A Panda Resilient Distributed Dataset (PRDD), is an extension of the RDD.
-    It is an RDD containing Panda dataframes and provides special methods that
-    are aware of this. You can access the underlying RDD at _rdd, but be
-    careful doing so.
-    Note: RDDs are lazy, so you operations are not performed until required."""
+    """A Panda Resilient Distributed Dataset (PRDD), is an extension of the RDD. This is based on """
 
-    def __init__(self, rdd):
-        self._rdd = rdd
+    def __init__(self, schemaRdd):
+        """Please construct using a pcontext."""
+        self._rdd = schemaRdd
 
     @classmethod
-    def fromRDD(cls, rdd):
-        """Construct a PRDD from an RDD. No checking or validation occurs."""
-        return PRDD(rdd)
+    def fromSchemaRDD(cls, schemaRdd):
+        """Construct a PRDD from an SchemaRDD. No checking or validation occurs."""
+        return PRDD(schemaRdd)
 
     def to_spark_sql(self):
+        """Returns the underlying SchemaRDD"""
+        return self._rdd
+    def from_rdd_of_dataframes(self, rdd):
         """A Sparkling Pandas specific function to turn a DDF into
         something that Spark SQL can query. To use the result you will
         need to call sqlCtx.inferSchema(rdd) and then register the result
@@ -52,7 +52,7 @@ class PRDD:
         def frame_to_spark_sql(frame):
             """Convert a Panda's DataFrame into Spark SQL Rows"""
             return map((lambda x: x[1].to_dict()), frame.iterrows())
-        return self._rdd.flatMap(frame_to_spark_sql)
+        self._rdd = self.rdd.flatMap(frame_to_spark_sql)
 
     def applymap(self, f, **kwargs):
         """Return a new PRDD by applying a function to each element of each

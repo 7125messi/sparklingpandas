@@ -141,16 +141,7 @@ class PSparkContext():
 
     def from_schema_rdd(self, schemaRDD):
         """Convert a schema RDD to a L{PRDD}."""
-        def _load_kv_partitions(partition):
-            """Convert a partition where each row is key/value data."""
-            partitionList = list(partition)
-            if len(partitionList) > 0:
-                return iter([
-                    pandas.DataFrame(data=partitionList)
-                ])
-            else:
-                return iter([])
-        return PRDD.fromRDD(schemaRDD.mapPartitions(_load_kv_partitions))
+        return PRDD.fromSchemaRDD(schemaRDD)
 
     def DataFrame(self, elements, *args, **kwargs):
         """Wraps the pandas.DataFrame operation."""
@@ -174,7 +165,7 @@ class PSparkContext():
         if 'index' in kwargs:
             index = kwargs['index']
         elementsWithIndex = zip(index, elements)
-        return PRDD.fromRDD(
+        return PRDD.fromDataFrameRDD(
             self.sc.parallelize(elementsWithIndex).mapPartitions(
                 _load_partitions))
 

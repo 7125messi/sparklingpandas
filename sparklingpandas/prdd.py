@@ -57,7 +57,7 @@ class PRDD:
                 ])
             else:
                 return iter([])
-        return self._rdd.mapPartiations(_load_kv_partitions)
+        return self._rdd.mapPartitions(_load_kv_partitions)
 
     def __evil_apply_with_dataframes(self, func):
         """Convert the underlying SchmeaRDD to an RDD of DataFrames.

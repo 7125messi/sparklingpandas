@@ -112,7 +112,7 @@ class GroupBy:
 
         For multiple groupings, the result index will be a MultiIndex.
         """
-        return PRDD.fromRDD(
+        return PRDD.fromDataFrameRDD(
             self._regroup_mergedRDD().values().map(
                 lambda x: x.median()))
 
@@ -122,7 +122,7 @@ class GroupBy:
         For multiple groupings, the result index will be a MultiIndex.
         """
         # TODO(holden): use stats counter
-        return PRDD.fromRDD(
+        return PRDD.fromDataFrameRDD(
             self._regroup_mergedRDD().values().map(
                 lambda x: x.mean()))
 
@@ -132,7 +132,7 @@ class GroupBy:
         For multiple groupings, the result index will be a MultiIndex.
         """
         # TODO(holden): use stats counter
-        return PRDD.fromRDD(
+        return PRDD.fromDataFrameRDD(
             self._regroup_mergedRDD().values().map(
                 lambda x: x.var(
                     ddof=ddof)))
@@ -155,7 +155,7 @@ class GroupBy:
             create_combiner,
             merge_value,
             merge_combiner)).values()
-        return PRDD.fromRDD(rddOfSum)
+        return PRDD.fromDataFrameRDD(rddOfSum)
 
     def min(self):
         """Compute the min for each group."""
@@ -175,7 +175,7 @@ class GroupBy:
             create_combiner,
             merge_value,
             merge_combiner)).values()
-        return PRDD.fromRDD(rddOfMin)
+        return PRDD.fromDataFrameRDD(rddOfMin)
 
     def max(self):
         """Compute the max for each group."""
@@ -195,7 +195,7 @@ class GroupBy:
             create_combiner,
             merge_value,
             merge_combiner)).values()
-        return PRDD.fromRDD(rddOfMax)
+        return PRDD.fromDataFrameRDD(rddOfMax)
 
     def first(self):
         """
@@ -218,7 +218,7 @@ class GroupBy:
             create_combiner,
             merge_value,
             merge_combiner)).values()
-        return PRDD.fromRDD(rddOfFirst)
+        return PRDD.fromDataFrameRDD(rddOfFirst)
 
     def last(self):
         """Pull out the last from each group."""
@@ -238,7 +238,7 @@ class GroupBy:
             create_combiner,
             merge_value,
             merge_combiner)).values()
-        return PRDD.fromRDD(rddOfLast)
+        return PRDD.fromDataFrameRDD(rddOfLast)
 
     def _regroup_mergedRDD(self):
         """A common pattern is we want to call groupby again on the dataframes
@@ -260,14 +260,14 @@ class GroupBy:
         nthRDD = self._regroup_mergedRDD().mapValues(
             lambda r: r.nth(
                 n, *args, **kwargs)).values()
-        return PRDD.fromRDD(nthRDD)
+        return PRDD.fromDataFrameRDD(nthRDD)
 
     def aggregate(self, f):
         """Apply the aggregation function.
         Note: This implementation does note take advantage of partial
         aggregation.
         """
-        return PRDD.fromRDD(
+        return PRDD.fromDataFrameRDD(
             self._regroup_mergedRDD().values().map(
                 lambda g: g.aggregate(f)))
 
@@ -296,4 +296,4 @@ class GroupBy:
             lambda key_data: key_data[1].apply(func, *args, **kwargs))
         reKeyedRDD = appliedRDD.flatMap(key_by_index)
         prdd = self._sortIfNeeded(reKeyedRDD).values()
-        return PRDD.fromRDD(prdd)
+        return PRDD.fromDataFrameRDD(prdd)

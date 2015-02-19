@@ -107,10 +107,10 @@ class PSparkContext():
 
         # Do the actual load
         if use_whole_file:
-            return PRDD.fromRDD(
+            return PRDD.fromDataFrameRDD(
                 self.sc.wholeTextFiles(name).mapPartitionsWithIndex(csv_file))
         else:
-            return PRDD.fromRDD(
+            return PRDD.fromDataFrameRDD(
                 self.sc.textFile(name).mapPartitionsWithIndex(csv_rows))
 
     def from_data_frame(self, df):
@@ -131,13 +131,12 @@ class PSparkContext():
                 return iter([])
         indexedData = zip(df.index, df.itertuples(index=False))
         rdd = self.sc.parallelize(indexedData).mapPartitions(loadFromKeyRow)
-        return PRDD.fromRDD(rdd)
+        return PRDD.fromDataFrameRDD(rdd)
 
     def sql(self, query):
         """Perform a SQL query and create a L{PRDD} of the result."""
-        return PRDD.fromRDD(
-            self.from_schema_rdd(
-                self._get_sqlctx().sql(query)))
+        return self.from_schema_rdd(
+                self._get_sqlctx().sql(query))
 
     def from_schema_rdd(self, schemaRDD):
         """Convert a schema RDD to a L{PRDD}."""

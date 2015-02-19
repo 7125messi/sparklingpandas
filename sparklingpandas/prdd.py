@@ -29,7 +29,7 @@ import pandas
 
 class PRDD:
 
-    """A Panda Resilient Distributed Dataset (PRDD), is an extension of the RDD. This is based on """
+    """A Panda Resilient Distributed Dataset (PRDD), is an extension of the RDD."""
 
     def __init__(self, schemaRdd):
         """Please construct using a pcontext."""

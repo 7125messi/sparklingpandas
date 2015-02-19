@@ -189,9 +189,9 @@ class PRDD:
         # f(valueToBeAdded, accumulator) so we do our reduce implementation.
         def appendFrames(frame_a, frame_b):
             return frame_a.append(frame_b)
-        return self.to_rdd_of_dataframes()._custom_rdd_reduce(appendFrames)
+        return self._custom_rdd_reduce(self.to_rdd_of_dataframes(), appendFrames)
 
-    def _custom_rdd_reduce(self, f):
+    def _custom_rdd_reduce(self, rdd, f):
         """Provides a custom RDD reduce which perserves ordering if the RDD has
         been sorted. This is useful for us becuase we need this functionality
         as many panda operations support sorting the results. The standard
@@ -207,7 +207,7 @@ class PRDD:
                     acc = f(acc, obj)
             if acc is not None:
                 yield acc
-        vals = self._rdd.mapPartitions(func).collect()
+        vals = rdd.mapPartitions(func).collect()
         return reduce(f, vals)
 
     def stats(self, columns):

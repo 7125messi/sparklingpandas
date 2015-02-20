@@ -130,7 +130,7 @@ class PContextTests(SparklingPandasTestCase):
         schemaRDD.registerAsTable("magic")
         magic = sqlCtx.sql("SELECT a FROM magic WHERE b = 10")
         collected = magic.collect()
-        assert collected == [{'a': 'magic'}]
+        assert collected.map(lambda x: x.to_dict()) == [{'a': 'magic'}]
 
 
 if __name__ == "__main__":

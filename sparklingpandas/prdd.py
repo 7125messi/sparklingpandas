@@ -48,7 +48,8 @@ class PRDD:
 
     def to_rdd_of_dataframes(self):
         """Convert a L{PRDD} into a RDD of DataFrames"""
-        def _load_kv_partitions(partition):
+        counts = self._rdd.mapPartitions(lambda i : i.count).collect()
+        def _load_kv_partitions(idx, partition):
             """Convert a partition where each row is key/value data."""
             partitionList = list(partition)
             if len(partitionList) > 0:
@@ -57,7 +58,7 @@ class PRDD:
                 ])
             else:
                 return iter([])
-        return self._rdd.mapPartitions(_load_kv_partitions)
+        return self._rdd.mapPartitionsWithIndex(_load_kv_partitions)
 
     def __evil_apply_with_dataframes(self, func):
         """Convert the underlying SchmeaRDD to an RDD of DataFrames.

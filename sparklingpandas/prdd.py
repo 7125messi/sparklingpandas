@@ -48,7 +48,6 @@ class PRDD:
 
     def to_rdd_of_dataframes(self):
         """Convert a L{PRDD} into a RDD of DataFrames"""
-        counts = self._rdd.mapPartitions(lambda i : i.count).collect()
         def _load_kv_partitions(idx, partition):
             """Convert a partition where each row is key/value data."""
             partitionList = list(partition)

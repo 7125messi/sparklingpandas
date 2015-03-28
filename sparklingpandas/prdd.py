@@ -81,6 +81,7 @@ class PRDD:
             """Convert a Panda's DataFrame into Spark SQL Rows"""
             return map((lambda x: x[1].to_dict()), frame.iterrows())
         self._rdd = rdd.flatMap(frame_to_spark_sql)
+        return self
 
     def applymap(self, f, **kwargs):
         """Return a new PRDD by applying a function to each element of each

@@ -43,8 +43,7 @@ class PRDD:
     def fromDataFrameRDD(cls, rdd):
         """Construct a PRDD from an RDD of DataFrames. No checking or validation occurs."""
         result = PRDD(None)
-        result.from_rdd_of_dataframes(rdd)
-        return result
+        return result.from_rdd_of_dataframes(rdd)
 
     def to_rdd_of_dataframes(self):
         """Convert a L{PRDD} into a RDD of DataFrames"""
@@ -80,8 +79,7 @@ class PRDD:
         def frame_to_spark_sql(frame):
             """Convert a Panda's DataFrame into Spark SQL Rows"""
             return map((lambda x: x[1].to_dict()), frame.iterrows())
-        self._rdd = rdd.flatMap(frame_to_spark_sql)
-        return self
+        return PRDD.fromSchemaRDD(rdd.flatMap(frame_to_spark_sql))
 
     def applymap(self, f, **kwargs):
         """Return a new PRDD by applying a function to each element of each
@@ -94,14 +92,13 @@ class PRDD:
         return self.__evil_apply_with_dataframes(
             lambda rdd: rdd.map(lambda x: x[key]))
 
-    def groupby(self, *args, **kwargs):
-        """Takes the same parameters as groupby on DataFrame.
-        Like with groupby on DataFrame disabling sorting will result in an
-        even larger performance improvement. This returns a Sparkling Pandas
-        L{GroupBy} object which supports many of the same operations as regular
-        GroupBy but not all."""
-        from sparklingpandas.groupby import GroupBy
-        return GroupBy(self.to_rdd_of_dataframes(), *args, **kwargs)
+    def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False):
+        """Returns a groupby on the schema rdd. If our groupby is simple uses underlying SchemaGroupBy"""
+        if isinstance(by, basestring) and axis == 0 and level == None:
+            return PRDD.fromSchemaRDD(self._rdd.groupBy(by))
+        else:
+            from sparklingpandas.groupby import GroupBy
+            return GroupBy(self.to_rdd_of_dataframes(), by, axis, level, as_index, sort, group_keys, squeeze)
 
     @property
     def dtypes(self):

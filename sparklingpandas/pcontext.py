@@ -151,7 +151,7 @@ class PSparkContext():
 
     def table(self, table):
         """Returns the provided table as a L{Dataframe}"""
-        return Dataframe.from_spark_df(self.sql_ctx.table(query))
+        return Dataframe.from_spark_df(self.sql_ctx.table(table))
 
     def from_schema_rdd(self, schemaRDD):
         return Dataframe.from_spark_df(schemaRDD)
@@ -190,7 +190,7 @@ class PSparkContext():
             for filename, contents in files:
                 yield pandas.read_json(sio(contents), *args, **kwargs)
 
-        return dataframe.fromRDD(
+        return Dataframe.from_spark_df(
             self.sc.wholeTextFiles(name).mapPartitionsWithIndex(json_file))
 
     def stop(self):

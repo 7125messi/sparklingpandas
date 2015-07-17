@@ -160,10 +160,7 @@ class GroupBy:
         if self._can_use_new_school():
             self._prep_new_school()
             import pyspark.sql.functions as func
-            expressions = self._create_exprs_using_func(func.mean, self._columns)
-            transformed = self._grouped_spark_sql.agg(*expressions)
-            restricted = transformed.select(*self._columns)
-            return Dataframe.fromSchemaRDD(restricted)
+            return self._use_aggregation(func.mean)
         self._prep_old_school()
         return Dataframe.fromDataFrameRDD(
             self._regroup_mergedRDD().values().map(
@@ -184,10 +181,7 @@ class GroupBy:
         if self._can_use_new_school():
             self._prep_new_school()
             import pyspark.sql.functions as func
-            expressions = self._create_exprs_using_func(func.sum, self._columns)
-            transformed = self._grouped_spark_sql.agg(*expressions)
-            restricted = transformed.select(*self._columns)
-            return Dataframe.fromSchemaRDD(restricted)
+            return self._use_aggregation(func.sum)
         self._prep_old_school()
         myargs = self._myargs
         mykwargs = self._mykwargs
@@ -207,15 +201,11 @@ class GroupBy:
             merge_combiner)).values()
         return Dataframe.fromDataFrameRDD(rddOfSum, self.sql_ctx)
 
-    def _column_as(self, f, name):
-        """Create the expression with a given return name.
-        Equivelent to as() in Spark SQL Scala."""
-        return pyspark.sql.column.Column(getattr(f._jc, "as")(name))
 
     def _create_exprs_using_func(self, f, columns):
         """Create aggregate expressions using the provided function
         with the result coming back as the original column name."""
-        expressions = map(lambda c: self._column_as(f(c), c),
+        expressions = map(lambda c: f(c).alias(c),
                           self._columns)
         return expressions
 
@@ -224,10 +214,7 @@ class GroupBy:
         if self._can_use_new_school():
             self._prep_new_school()
             import pyspark.sql.functions as func
-            expressions = self._create_exprs_using_func(func.min, self._columns)
-            transformed = self._grouped_spark_sql.agg(*expressions)
-            restricted = transformed.select(*self._columns)
-            return Dataframe.fromSchemaRDD(restricted)
+            return self._use_aggregation(func.min)
         self._prep_old_school()
         myargs = self._myargs
         mykwargs = self._mykwargs
@@ -252,10 +239,7 @@ class GroupBy:
         if self._can_use_new_school():
             self._prep_new_school()
             import pyspark.sql.functions as func
-            expressions = self._create_exprs_using_func(func.max, self._columns)
-            transformed = self._grouped_spark_sql.agg(*expressions)
-            restricted = transformed.select(*self._columns)
-            return Dataframe.fromSchemaRDD(restricted)
+            return self._use_aggregation(func.max)
         self._prep_old_school()
         myargs = self._myargs
         mykwargs = self._mykwargs
@@ -275,7 +259,7 @@ class GroupBy:
             merge_combiner)).values()
         return Dataframe.fromDataFrameRDD(rddOfMax, self.sql_ctx)
 
-    def _use_aggregation(self, agg, aggName, columns=None):
+    def _use_aggregation(self, agg, columns=None):
         """Compute the result using the aggregation function provided.
         The aggregation name must also be provided so we can strip of the extra
         name that Spark SQL adds."""
@@ -284,8 +268,7 @@ class GroupBy:
         from pyspark.sql import functions as F
         aggs = map(lambda column: agg(column).alias(column), self._columns)
         aggRdd = self._grouped_spark_sql.agg(*aggs)
-        df = Dataframe.from_schema_rdd(aggRdd)
-        df._index_names = [self._by]
+        df = Dataframe.from_schema_rdd(aggRdd, self._by)
         return df
 
     def first(self):
@@ -296,8 +279,8 @@ class GroupBy:
         # If its possible to use Spark SQL grouping do it
         if self._can_use_new_school():
             self._prep_new_school()
-            from pyspark.sql import functions as F
-            return self._use_aggregation(F.first, "FIRST")
+            import pyspark.sql.functions as func
+            return self._use_aggregation(func.first)
         myargs = self._myargs
         mykwargs = self._mykwargs
         self._prep_old_school()
@@ -321,7 +304,11 @@ class GroupBy:
         """Pull out the last from each group."""
         myargs = self._myargs
         mykwargs = self._mykwargs
-        self._prep_old_school()
+        # If its possible to use Spark SQL grouping do it
+        if self._can_use_new_school():
+            self._prep_new_school()
+            import pyspark.sql.functions as func
+            return self._use_aggregation(func.last)
 
         def create_combiner(x):
             return x.groupby(*myargs, **mykwargs).last()
@@ -373,7 +360,7 @@ class GroupBy:
         if self._can_use_new_school() and f == pd.Series.kurtosis:
             self._prep_new_school()
             import custom_functions as CF
-            return self._use_aggregation(CF.kurtosis, "Kurtosis")
+            return self._use_aggregation(CF.kurtosis)
         else:
             self._prep_old_school()
             return Dataframe.fromDataFrameRDD(

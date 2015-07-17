@@ -19,6 +19,7 @@
 from sparklingpandas.utils import add_pyspark_path
 from sparklingpandas.dataframe import Dataframe
 add_pyspark_path()
+import pyspark
 import pandas as pd
 import numpy as np
 
@@ -52,9 +53,13 @@ class GroupBy:
 
     def _prep_new_school(self):
         """Used Spark SQL group approach"""
-        self._grouped_spark_sql = self._prdd.to_spark_sql().groupBy(self._by)
+        # Strip the index info
+        non_index_columns = filter(lambda x: x not in self._prdd._index_names,
+                                  self._prdd._column_names())
+        self._grouped_spark_sql = (self._prdd.to_spark_sql()
+                                   .select(non_index_columns).groupBy(self._by))
         self._columns = filter(lambda x: x != self._by,
-                               self._prdd._column_names())
+                               non_index_columns)
 
     def _prep_old_school(self):
         """Prepare the old school pandas group by based approach."""
@@ -86,9 +91,7 @@ class GroupBy:
 
     def __len__(self):
         """Number of groups."""
-        if self._can_use_new_school():
-            self._prep_new_school()
-            return self._prdd.to_spark_sql.groupby(self._by).count()
+        # TODO: use Spark SQL
         self._prep_old_school()
         return self._mergedRDD.count()
 
@@ -156,7 +159,11 @@ class GroupBy:
         """
         if self._can_use_new_school():
             self._prep_new_school()
-            return Dataframe.from_schema_rdd(self._grouped_spark_sql.mean())
+            import pyspark.sql.functions as func
+            expressions = self._create_exprs_using_func(func.mean, self._columns)
+            transformed = self._grouped_spark_sql.agg(*expressions)
+            restricted = transformed.select(*self._columns)
+            return Dataframe.fromSchemaRDD(restricted)
         self._prep_old_school()
         return Dataframe.fromDataFrameRDD(
             self._regroup_mergedRDD().values().map(
@@ -176,7 +183,11 @@ class GroupBy:
         """Compute the sum for each group."""
         if self._can_use_new_school():
             self._prep_new_school()
-            return Dataframe.from_schema_rdd(self._grouped_spark_sql.sum())
+            import pyspark.sql.functions as func
+            expressions = self._create_exprs_using_func(func.sum, self._columns)
+            transformed = self._grouped_spark_sql.agg(*expressions)
+            restricted = transformed.select(*self._columns)
+            return Dataframe.fromSchemaRDD(restricted)
         self._prep_old_school()
         myargs = self._myargs
         mykwargs = self._mykwargs
@@ -196,11 +207,27 @@ class GroupBy:
             merge_combiner)).values()
         return Dataframe.fromDataFrameRDD(rddOfSum, self.sql_ctx)
 
+    def _column_as(self, f, name):
+        """Create the expression with a given return name.
+        Equivelent to as() in Spark SQL Scala."""
+        return pyspark.sql.column.Column(getattr(f._jc, "as")(name))
+
+    def _create_exprs_using_func(self, f, columns):
+        """Create aggregate expressions using the provided function
+        with the result coming back as the original column name."""
+        expressions = map(lambda c: self._column_as(f(c), c),
+                          self._columns)
+        return expressions
+
     def min(self):
         """Compute the min for each group."""
         if self._can_use_new_school():
             self._prep_new_school()
-            return Dataframe.from_schema_rdd(self._grouped_spark_sql.min())
+            import pyspark.sql.functions as func
+            expressions = self._create_exprs_using_func(func.min, self._columns)
+            transformed = self._grouped_spark_sql.agg(*expressions)
+            restricted = transformed.select(*self._columns)
+            return Dataframe.fromSchemaRDD(restricted)
         self._prep_old_school()
         myargs = self._myargs
         mykwargs = self._mykwargs
@@ -224,7 +251,11 @@ class GroupBy:
         """Compute the max for each group."""
         if self._can_use_new_school():
             self._prep_new_school()
-            return Dataframe.from_schema_rdd(self._grouped_spark_sql.max())
+            import pyspark.sql.functions as func
+            expressions = self._create_exprs_using_func(func.max, self._columns)
+            transformed = self._grouped_spark_sql.agg(*expressions)
+            restricted = transformed.select(*self._columns)
+            return Dataframe.fromSchemaRDD(restricted)
         self._prep_old_school()
         myargs = self._myargs
         mykwargs = self._mykwargs

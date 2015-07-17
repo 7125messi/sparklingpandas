@@ -23,10 +23,8 @@ import pandas
 add_pyspark_path()
 from pyspark import SparkConf
 from sparklingpandas.pcontext import PSparkContext
-from sparklingpandas.dataframe import Dataframe
 import unittest2
 import sys
-import functools
 from pandas.util.testing import assert_frame_equal
 
 
@@ -89,7 +87,7 @@ class SparklingPandasTestCase(unittest2.TestCase):
         self.mixednaframe = pandas.DataFrame(self.mixednainput,
                                              columns=['a', 'b', 'c', 'd'])
 
-    def tearDown(self):
+    def tear_down(self):
         """
         Tear down the basic panda spark test case. This stops the running
         context and does a hack to prevent Akka rebinding on the same port.
@@ -100,7 +98,8 @@ class SparklingPandasTestCase(unittest2.TestCase):
         # immediately on shutdown
         self.psc.spark_ctx._jvm.System.clearProperty("spark.driver.port")
 
-    def _compareDataFrames(self, df1, df2):
+    @staticmethod
+    def _compare_dfs(df1, df2):
         """
         Compare two DataFrames for equality
         """

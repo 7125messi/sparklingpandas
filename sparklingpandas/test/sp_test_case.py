@@ -86,7 +86,7 @@ class SparklingPandasTestCase(unittest2.TestCase):
         self.mixednaframe = pandas.DataFrame(self.mixednainput,
                                              columns=['a', 'b', 'c', 'd'])
 
-    def tear_down(self):
+    def tearDown(self):
         """
         Tear down the basic panda spark test case. This stops the running
         context and does a hack to prevent Akka rebinding on the same port.

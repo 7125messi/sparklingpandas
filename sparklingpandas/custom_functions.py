@@ -25,7 +25,7 @@ _FUNCTIONS = {
 
 def register_sql_extensions(sql_ctx):
     scala_sql_context = sql_ctx._ssql_ctx
-    spark_ctx = sql_ctx._spark_ctx
+    spark_ctx = sql_ctx._sc
     spark_ctx._jvm.com.sparklingpandas.functions.registerUdfs(scala_sql_context)
 
 for _name, _doc in _FUNCTIONS.items():

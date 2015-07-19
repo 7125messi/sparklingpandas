@@ -5,8 +5,8 @@ if [ -z "$SPARK_HOME" ]; then
 fi
 
 JARS=`ls ./target/scala-2.10/*.jar`
-PYSPARK_SUBMIT_ARGS="--jars $JARS --driver-class-path $JARS pyspark-shell"
-PYTHON_PATH=./../../../..
 if [ -z "$JARS" ]; then
     echo "No Sparkling pandas assembly jar found, please build with sbt/sbt assembly"
 fi
+PYSPARK_SUBMIT_ARGS="--jars $JARS --driver-class-path $JARS pyspark-shell"
+PYTHON_PATH=./../../../..

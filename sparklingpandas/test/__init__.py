@@ -5,7 +5,7 @@ directly.
 import subprocess as sub
 
 try:
-    sub.check_output("source ./sparklingpandas/test/resources/setup-test-env"
+    sub.check_output("./sparklingpandas/test/resources/setup-test-env"
                      + ".sh", shell=True,
                         stderr=sub.STDOUT)
 except sub.CalledProcessError, err:

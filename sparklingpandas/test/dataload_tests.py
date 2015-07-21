@@ -110,7 +110,7 @@ class DataLoad(SparklingPandasTestCase):
                 "name": x[0],
                 "coffees": int(
                     x[1])})
-        sql_ctx = self.psc.sql_ctx()
+        sql_ctx = self.psc.sql_ctx
         coffee_table = sql_ctx.inferSchema(rdd)
         coffee_table.registerAsTable("coffee")
         # Query it

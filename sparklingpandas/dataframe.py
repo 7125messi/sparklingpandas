@@ -176,7 +176,7 @@ class Dataframe:
         a single key it returns a series, however we don't have good
         support for series just yet so we always returns DataFrames.
         """
-        return self.from_spark_rdd(self._schema_rdd.select(key), self.sql_ctx)
+        return self.from_schema_rdd(self._schema_rdd.select(key), index_names=None)
 
     def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True,
                 group_keys=True, squeeze=False):
@@ -290,6 +290,8 @@ def _update_index_on_df(df, index_names):
 
 def _denormalize_index_names(index_names):
     z = 0
+    if index_names is None:
+        return None
     index_names = list(index_names)
     while z < len(index_names):
         if index_names[z].startswith("index_") or index_names[z] == "index":
@@ -300,6 +302,8 @@ def _denormalize_index_names(index_names):
 
 def _normalize_index_names(index_names):
     z = 0
+    if index_names is None:
+        return None
     index_names = list(index_names)
     while z < len(index_names):
         if not index_names[z]:

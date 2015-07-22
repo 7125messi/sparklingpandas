@@ -46,11 +46,12 @@ class PContextTests(SparklingPandasTestCase):
         with open(temp_file.name, 'wb') as f:
             json.dump(input, f)
 
-        dataframe = self.psc.read_json(temp_file.name)
+        dataframe = self.psc.read_json(temp_file.name, orient='records')
         elements = dataframe.collect()
         os.unlink(temp_file.name)
-
-        assert len(elements) == 3
+        print "Index is \n%s" % elements.index
+        print "elements are %s" % elements
+        assert len(elements.index) == 3
         expected = sorted([u'coffee', u'tea', u'water'])
         assert sorted(elements['magic']) == expected
 

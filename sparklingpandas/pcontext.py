@@ -114,7 +114,7 @@ class PSparkContext():
             first_line = self.spark_ctx.textFile(name).first()
             frame = pandas.read_csv(sio(first_line), **kwargs)
             # pylint sees frame as a tuple despite it being a Dataframe
-            mynames = list(frame.columns.values)  # pylint: disable=no-member
+            mynames = list(frame.columns)
             _skiprows += 1
 
         # Do the actual load
@@ -193,7 +193,7 @@ class PSparkContext():
             return Dataframe.from_spark_rdd(
                 self.sql_ctx.createDataFrame(pandas_rdd_records, schema), self.sql_ctx)
 
-        schema = pandas_rdd.map(lambda x: x.columns.values).first()
+        schema = pandas_rdd.map(lambda x: x.columns).first()
         rdd_records = pandas_rdd.flatMap(_extract_records)
         return _from_pandas_rdd_records(rdd_records, schema)
 
@@ -211,7 +211,7 @@ class PSparkContext():
                 yield [records.tolist() for records in df.to_records()]
 
         return Dataframe.from_spark_rdd(
-            self.spark_ctx.wholeTextFiles(name).flatMapPartitions(
+            self.spark_ctx.wholeTextFiles(name).mapPartitions(
                 json_file_to_df), self.sql_ctx)
 
     def stop(self):

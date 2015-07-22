@@ -211,7 +211,7 @@ class PSparkContext():
                 yield [records.tolist() for records in df.to_records()]
 
         return Dataframe.from_spark_rdd(
-            self.spark_ctx.wholeTextFiles(name).mapPartitions(
+            self.spark_ctx.wholeTextFiles(name).flatMapPartitions(
                 json_file_to_df), self.sql_ctx)
 
     def stop(self):

@@ -25,8 +25,14 @@ from sparklingpandas.pcontext import PSparkContext
 from pyspark.sql import SQLContext, HiveContext
 from pyspark import SparkContext
 
-spark_ctx = SparkContext()
-sqlCtx = SQLContext(spark_ctx)
+try:
+    spark_ctx = sc
+except:
+    spark_ctx = SparkContext()
+try:
+    sqlCtx = sqlContext
+except:
+    sqlCtx = SQLContext(spark_ctx)
 hiveCtx = HiveContext(sqlCtx)
 sqlContext = sqlCtx
 from pyspark.sql import Row

@@ -180,7 +180,7 @@ class Dataframe:
 
     def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True,
                 group_keys=True, squeeze=False):
-        """Returns a groupby on the schema rdd. This returns a GroupBy object.
+        """Performs a groupBy on the Data frame returning a GroupBy object.
         Note that grouping by a column name will be faster than most other
         options due to implementation."""
         from sparklingpandas.groupby import GroupBy

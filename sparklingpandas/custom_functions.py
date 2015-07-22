@@ -8,7 +8,9 @@ __all__ = []
 
 
 def _create_function(name, doc=""):
-    """ Create a function for aggregator by name"""
+    """Create a function for aggregator by name. This function must be defined
+    in the functions object in SparklingPandas and should be able to take both
+    column & string (representing column name) as input."""
     def _(col):
         spark_ctx = SparkContext._active_spark_context
         java_ctx = (getattr(spark_ctx._jvm.com.sparklingpandas.functions,

@@ -30,7 +30,7 @@ from sparklingpandas.custom_functions import register_sql_extensions
 class PSparkContext():
 
     """This is a thin wrapper around SparkContext from PySpark which makes it
-    easy to load data into L{PRDD}s."""
+    easy to load data into L{DataFrame}s."""
 
     def __init__(self, spark_context, sql_ctx=None):
         """Initialize a PSparkContext with the associacted spark context,
@@ -67,6 +67,7 @@ class PSparkContext():
         No other values of header is supported.
         All additional parameters are passed to the read_csv function.
         TODO: Use spark-csv package if the request could be fulfilled by it.
+        (See issue #77)
         """
         def csv_file(partition_number, files):
             # pylint: disable=unexpected-keyword-arg
@@ -139,7 +140,7 @@ class PSparkContext():
         return self.from_spark_rdd(schema_rdd, self.sql_ctx)
 
     def from_pd_data_frame(self, local_df):
-        """Make a distributed dataframe from a local dataframe. The intend use
+        """Make a dataframe from a Panda's dataframe. The intend use
         is for testing. Note: dtypes are re-infered, so they may not match."""
         def frame_to_rows(frame):
             """Convert a Panda's DataFrame into Spark SQL Rows"""
@@ -178,13 +179,16 @@ class PSparkContext():
         return Dataframe.from_spark_rdd(spark_rdd, sql_ctx)
 
     def DataFrame(self, elements, *args, **kwargs):
-        """Wraps the pandas.DataFrame operation."""
+        """Create a Panda's DataFrame using the arguments provided and convert
+        it to a Sparkling Panda's DataFrame."""
         return self.from_pd_data_frame(pandas.DataFrame(
             elements,
             *args,
             **kwargs))
 
     def from_pandas_rdd(self, pandas_rdd):
+        """Create a DataFrame from an RDD consisting of
+        Panda's DataFrames."""
         def _extract_records(data):
             return [r.tolist() for r in data.to_records(index=False)]
 
@@ -215,6 +219,6 @@ class PSparkContext():
                 json_file_to_df), self.sql_ctx)
 
     def stop(self):
-        """Stop the underlying SparkContext
+        """Stop the underlying SparkContext.
         """
         self.spark_ctx.stop()

@@ -31,6 +31,7 @@ class PStats:
 
 
 class PStatsOnColumn:
+    """The stats object for a given column."""
     def __init__(self, df, key):
         self._df = df
         self._key = key

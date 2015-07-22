@@ -44,7 +44,8 @@ class GroupBy:
 
     def _can_use_new_school(self):
         """Determine if we can use new school grouping, depends on the
-        args / kwargs"""
+        args / kwargs. New school grouping refers to groupby's executed
+        using Spark SQL."""
         # TODO: check the other components for sanity
         # and add support for doing this with a map function if possible.
         if isinstance(self._by, basestring):
@@ -52,7 +53,9 @@ class GroupBy:
         return False
 
     def _prep_new_school(self):
-        """Used Spark SQL group approach"""
+        """Setup the groupby using Spark SQL. The columns are available as
+        _columns and the grouped Spark SQL DataFrame is available as
+        _grouped_spark_sql."""
         # Strip the index info
         non_index_columns = filter(lambda x: x not in self._prdd._index_names,
                                    self._prdd._column_names())
@@ -63,7 +66,11 @@ class GroupBy:
                                non_index_columns)
 
     def _prep_old_school(self):
-        """Prepare the old school pandas group by based approach."""
+        """Prepare the old school pandas group by based approach.
+        This takes the input Spark DataFrame and converts it to an
+        RDD of Panda's DataFrames and performs the groupby operation
+        using the Panda's DataFrames. The result is available as
+        _mergedRDD."""
         myargs = self._myargs
         mykwargs = self._mykwargs
 
@@ -368,6 +375,8 @@ class GroupBy:
                     lambda g: g.aggregate(f)), self.sql_ctx)
 
     def agg(self, f):
+        """Apply the provided aggregation function. Wrapper around
+        aggregate."""
         return self.aggregate(f)
 
     def apply(self, func, *args, **kwargs):
